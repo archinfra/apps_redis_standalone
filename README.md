@@ -43,6 +43,19 @@ dist/redis-standalone-installer-arm64.run
 dist/redis-standalone-installer-arm64.run.sha256
 ```
 
+## tag 构建
+
+真正的 tag 构建必须使用 Git tag 触发：
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+推送 `v*` tag 后，GitHub Actions 会构建 `amd64`、`arm64` 两个离线 `.run` 包，并发布 Release。
+
+如果通过 GitHub Actions 的 `GITHUB_TOKEN` 在 workflow 内创建 tag，GitHub 默认不会再次触发另一个 workflow；因此建议在本地或 CI 使用真实用户 token 执行上述 `git tag` / `git push origin v0.1.0`。
+
 ## 离线安装
 
 ```bash
