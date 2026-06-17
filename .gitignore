@@ -1,0 +1,28 @@
+# build outputs
+/dist/
+/.build-payload/
+/payload.tar.gz
+*.run
+*.run.sha256
+*.tar
+*.tar.gz
+*.zip
+
+# local runtime/config
+*.local
+*.env
+.env
+config.local.*
+
+# logs/temp
+*.log
+*.tmp
+*.swp
+*.swo
+/tmp/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
