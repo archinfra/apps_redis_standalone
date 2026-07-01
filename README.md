@@ -2,7 +2,20 @@
 
 Redis 单点服务 Kubernetes 离线 `.run` 安装包项目。
 
-本项目用于把 Redis 单实例以统一离线交付形态打包：构建机拉取指定架构镜像，保存为 tar，生成 `image-index.tsv`，拼接成自解压 `.run`；离线现场运行 `.run install` 后自动导入镜像、重打 tag、推送到内网仓库、渲染 Kubernetes YAML 并安装 Redis StatefulSet。
+本项目用于把 Redis 单实例以统一离线交付形态打包：构建机先基于仓库内 `docker/redis/Dockerfile` 自构建 Redis 镜像，再保存为 tar，生成 `image-index.tsv`，拼接成自解压 `.run`；离线现场运行 `.run install` 后自动导入镜像、重打 tag、推送到内网仓库、渲染 Kubernetes YAML 并安装 Redis StatefulSet。
+
+## 这次修复了什么
+
+之前 `images/image.json` 使用 `pull: docker.io/library/redis:8`，所以 Actions 只是拉官方镜像再打包，并没有自构建镜像。现在已经改成 `dockerfile: docker/redis/Dockerfile`，Actions 会按 `amd64/arm64` 分别执行 `docker buildx build --load`。
+
+同时把 Redis 配置、启动逻辑和健康检查脚本内置进镜像：
+
+- `docker/redis/Dockerfile`
+- `docker/redis/redis.conf`
+- `docker/redis/redis-standalone-entrypoint`
+- `docker/redis/redis-healthcheck`
+
+Kubernetes manifest 不再挂载 ConfigMap 作为 Redis 配置文件，也不再在 Pod command 里拼接启动命令；容器直接使用镜像内置 entrypoint，探针直接调用 `/usr/local/bin/redis-healthcheck`。
 
 ## 目录结构
 
@@ -13,6 +26,12 @@ apps_redis_standalone/
   install.sh
   images/
     image.json
+  docker/
+    redis/
+      Dockerfile
+      redis.conf
+      redis-standalone-entrypoint
+      redis-healthcheck
   manifests/
     redis-standalone.yaml.tmpl
   docs/
@@ -23,7 +42,7 @@ apps_redis_standalone/
 
 ## 构建
 
-构建机要求：Linux shell、Docker、python3、tar、sha256sum。构建 `arm64` 时 Docker 需要能拉取对应平台镜像。
+构建机要求：Linux shell、Docker、python3、tar、sha256sum。构建 `arm64` 时 Docker Buildx/QEMU 需要可用。
 
 ```bash
 bash -n build.sh install.sh
