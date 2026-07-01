@@ -10,10 +10,24 @@ bash build.sh --arch amd64
 bash build.sh --arch arm64
 ```
 
-构建过程会按照 `images/image.json` 拉取 `docker.io/library/redis:8`，分别保存为：
+构建过程现在会按照 `images/image.json` 使用仓库内 `docker/redis/Dockerfile` 自构建镜像，而不是直接拉 `docker.io/library/redis:8` 打包。
 
-- `payload/images/redis-amd64.tar`
-- `payload/images/redis-arm64.tar`
+构建出来的镜像默认 tag：
+
+```text
+sealos.hub:5000/kube4/redis-standalone:8
+```
+
+并分别保存为：
+
+- `payload/images/redis-standalone-amd64.tar`
+- `payload/images/redis-standalone-arm64.tar`
+
+镜像内置：
+
+- `/etc/redis/redis.conf`
+- `/usr/local/bin/redis-standalone-entrypoint`
+- `/usr/local/bin/redis-healthcheck`
 
 并生成：
 
@@ -56,10 +70,10 @@ chmod +x redis-standalone-installer-amd64.run
 1. 从 `.run` 内按字节偏移解出 payload。
 2. 读取 `images/image-index.tsv`。
 3. `docker load -i payload/images/*.tar`。
-4. 将默认镜像 `sealos.hub:5000/kube4/redis:8` retarget 到 `--registry` 指定的内网仓库前缀。
+4. 将默认镜像 `sealos.hub:5000/kube4/redis-standalone:8` retarget 到 `--registry` 指定的内网仓库前缀。
 5. `docker tag` 并 `docker push` 到目标内网仓库。
 6. 渲染 `manifests/redis-standalone.yaml.tmpl`。
-7. `kubectl apply` 安装 Namespace、Secret、ConfigMap、Service、StatefulSet、PVC。
+7. `kubectl apply` 安装 Namespace、Secret、Service、StatefulSet、PVC。
 8. 等待 StatefulSet ready。
 
 ## 4. 半离线安装
@@ -107,6 +121,22 @@ PONG
 
 ## 7. 常见问题
 
+### 为什么之前不是自构建？
+
+旧版 `images/image.json` 使用：
+
+```json
+"pull": "docker.io/library/redis:8"
+```
+
+这意味着构建机只是拉官方镜像、保存 tar、打进 `.run`。现在已改成：
+
+```json
+"dockerfile": "docker/redis/Dockerfile"
+```
+
+所以 GitHub Actions 会自己构建 Redis standalone 镜像，再打包。
+
 ### Pod ImagePullBackOff
 
 检查模板渲染出来的镜像地址是否为内网仓库地址：
@@ -118,7 +148,7 @@ kubectl get pod -n aict -l app.kubernetes.io/instance=redis-standalone -o yaml |
 检查节点是否能访问内网仓库：
 
 ```bash
-crictl pull sealos.hub:5000/kube4/redis:8
+crictl pull sealos.hub:5000/kube4/redis-standalone:8
 ```
 
 ### PVC Pending
