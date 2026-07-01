@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+: "${REDIS_PASSWORD:=}"
+
+if [ -n "${REDIS_PASSWORD}" ]; then
+  exec redis-cli -a "${REDIS_PASSWORD}" --no-auth-warning ping
+fi
+
+exec redis-cli ping
