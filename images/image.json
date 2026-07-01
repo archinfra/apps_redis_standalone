@@ -3,16 +3,16 @@
     "name": "redis",
     "arch": "amd64",
     "platform": "linux/amd64",
-    "pull": "docker.io/library/redis:8",
-    "tag": "sealos.hub:5000/kube4/redis:8",
-    "tar": "redis-amd64.tar"
+    "dockerfile": "docker/redis/Dockerfile",
+    "tag": "sealos.hub:5000/kube4/redis-standalone:8",
+    "tar": "redis-standalone-amd64.tar"
   },
   {
     "name": "redis",
     "arch": "arm64",
     "platform": "linux/arm64",
-    "pull": "docker.io/library/redis:8",
-    "tag": "sealos.hub:5000/kube4/redis:8",
-    "tar": "redis-arm64.tar"
+    "dockerfile": "docker/redis/Dockerfile",
+    "tag": "sealos.hub:5000/kube4/redis-standalone:8",
+    "tar": "redis-standalone-arm64.tar"
   }
 ]
